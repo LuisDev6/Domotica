@@ -53,8 +53,6 @@ async function getLightStatus() {
     path: `/v1.0/devices/${DEVICE_ID}/status`
   });
 
-  console.log('RAW status response:', JSON.stringify(res, null, 2));
-
   if (!res.success || !Array.isArray(res.result)) {
     throw new Error(`Error obteniendo estado: ${res.msg || 'respuesta inválida'}`);
   }

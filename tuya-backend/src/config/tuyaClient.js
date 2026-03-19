@@ -3,8 +3,8 @@ const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
 require('dotenv').config();
 
-const BASE_URL      = process.env.TUYA_BASE_URL;
-const CLIENT_ID     = process.env.TUYA_CLIENT_ID;
+const BASE_URL = process.env.TUYA_BASE_URL;
+const CLIENT_ID = process.env.TUYA_CLIENT_ID;
 const CLIENT_SECRET = process.env.TUYA_CLIENT_SECRET;
 
 function sha256(content) {
@@ -52,7 +52,6 @@ async function getToken() {
   cachedToken = res.data.result.access_token;
   // 10 segundos de margen antes del vencimiento real
   tokenExpireTime = Date.now() + res.data.result.expire_time * 1000 - 10000;
-  console.log('Token renovado. Vence:', new Date(tokenExpireTime).toLocaleTimeString());
 
   return cachedToken;
 }
@@ -67,18 +66,18 @@ async function request({ method, path, body = null }) {
     const nonce = crypto.randomUUID();
     sign = buildSign({ method, path, t, accessToken: token, nonce });
     headers = {
-      client_id:    CLIENT_ID,
+      client_id: CLIENT_ID,
       access_token: token,
       sign, t, nonce,
-      sign_method:  'HMAC-SHA256'
+      sign_method: 'HMAC-SHA256'
     };
   } else {
     sign = buildSign({ method, path, body, t, accessToken: token });
     headers = {
-      client_id:      CLIENT_ID,
-      access_token:   token,
+      client_id: CLIENT_ID,
+      access_token: token,
       sign, t,
-      sign_method:    'HMAC-SHA256',
+      sign_method: 'HMAC-SHA256',
       'Content-Type': 'application/json'
     };
   }
