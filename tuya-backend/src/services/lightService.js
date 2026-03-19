@@ -3,7 +3,6 @@ require('dotenv').config();
 
 const DEVICE_ID = process.env.TUYA_DEVICE_ID;
 
-// 🔹 Prender luz
 async function turnOn() {
   return request({
     method: 'POST',
@@ -12,7 +11,6 @@ async function turnOn() {
   });
 }
 
-// 🔹 Apagar luz
 async function turnOff() {
   return request({
     method: 'POST',
@@ -21,52 +19,50 @@ async function turnOff() {
   });
 }
 
-// 🔹 Cambiar brillo (0-1000)
 async function setBrightness(value) {
+  const clamped = Math.max(10, Math.min(1000, value));
   return request({
     method: 'POST',
     path: `/v1.0/iot-03/devices/${DEVICE_ID}/commands`,
-    body: { commands: [{ code: 'bright_value_v2', value }] }
-  });
-}
-
-// 🔹 Cambiar temperatura de color (1000-10000)
-async function setColorTemp(value) {
-  return request({
-    method: 'POST',
-    path: `/v1.0/iot-03/devices/${DEVICE_ID}/commands`,
-    body: { commands: [{ code: 'temp_value_v2', value }] }
-  });
-}
-
-// 🔹 Obtener estado de la lámpara
-async function getLightStatus() {
-  try {
-    const res = await request({
-      method: 'GET',
-      path: `/v1.0/devices/${DEVICE_ID}/status`
-    });
-
-    if (!res.success || !Array.isArray(res.result)) {
-      throw new Error('Respuesta inválida del dispositivo');
+    body: {
+      commands: [
+        { code: 'work_mode',       value: 'white'   },
+        { code: 'bright_value_v2', value: clamped   }
+      ]
     }
-
-    const status = res.result.reduce((acc, item) => {
-      acc[item.code] = item.value;
-      return acc;
-    }, {});
-
-    return status;
-  } catch (error) {
-    console.error('getLightStatus: respuesta inválida', error.response?.data || error);
-    throw error;
-  }
+  });
 }
 
-module.exports = {
-  turnOn,
-  turnOff,
-  setBrightness,
-  setColorTemp,
-  getLightStatus
-};
+async function setColorTemp(value) {
+  const clamped = Math.max(0, Math.min(1000, value));
+  return request({
+    method: 'POST',
+    path: `/v1.0/iot-03/devices/${DEVICE_ID}/commands`,
+    body: {
+      commands: [
+        { code: 'work_mode',     value: 'white'  },
+        { code: 'temp_value_v2', value: clamped  }
+      ]
+    }
+  });
+}
+
+async function getLightStatus() {
+  const res = await request({
+    method: 'GET',
+    path: `/v1.0/devices/${DEVICE_ID}/status`
+  });
+
+  console.log('RAW status response:', JSON.stringify(res, null, 2));
+
+  if (!res.success || !Array.isArray(res.result)) {
+    throw new Error(`Error obteniendo estado: ${res.msg || 'respuesta inválida'}`);
+  }
+
+  return res.result.reduce((acc, item) => {
+    acc[item.code] = item.value;
+    return acc;
+  }, {});
+}
+
+module.exports = { turnOn, turnOff, setBrightness, setColorTemp, getLightStatus };
